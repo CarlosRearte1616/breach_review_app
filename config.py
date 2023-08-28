@@ -1,0 +1,22 @@
+import os
+
+from dotenv import load_dotenv
+
+from entities.model import Model
+
+load_dotenv()
+AZURE_AI_API_KEY = os.getenv("AZURE_AI_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_TYPE = os.getenv("OPENAI_API_TYPE")
+OPENAI_API_BASE = os.getenv("OPENAI_API_BASE")
+OPENAI_API_VERSION = os.getenv("OPENAI_API_VERSION")
+AZURE_DEPLOYMENT_NAME = os.getenv("AZURE_DEPLOYMENT_NAME")
+
+MAX_TIME_PER_CHUNK = 180
+MAX_CHUNK_SIZE = 800
+CHUNK_OVERLAP = 100
+LLM_MODEL = Model.GPT3_5_TURBO_AZURE_16K
+TEMPERATURE = 0.0
+
+MAX_CONCURRENT_WORKERS = 500
+MAX_BATCH_SIZE = 100
