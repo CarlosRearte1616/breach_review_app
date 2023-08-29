@@ -11,3 +11,4 @@ aioprocessing~=2.0.1
 numpy==1.25.2
 python-dateutil~=2.8.2
 stanza~=1.5.0
+flair

@@ -11,6 +11,8 @@ from frameworks_and_drivers.llms.langchain_processor import LangchainProcessor
 from interface_adapters.app_ui import AppUI
 from interface_adapters.document_processing_service import DocumentProcessingService
 
+import json
+
 
 def run_app():
     logger = logging.getLogger(__name__)
@@ -19,13 +21,13 @@ def run_app():
     logger.addHandler(stream_handler)
 
     print("Running app")
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         loop = asyncio.ProactorEventLoop()
     else:
         loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-    if 'is_initialized' not in st.session_state:
+    if "is_initialized" not in st.session_state:
         st.session_state.is_initialized = True
         st.session_state.processed_files = []
         st.session_state.combined_results = []
@@ -43,23 +45,41 @@ def run_app():
     toggle_status = ui.get_toggle_componet()
     st.session_state.toggle_status = toggle_status
     ui.toggle_status = toggle_status
-    
+
+    status = {}
+
+    with open("state.json", "w") as json_file:
+        status["ner_toggle"] = toggle_status
+        json.dump(status, json_file)
+
     uploaded_files = ui.get_uploaded_files()
     if len(st.session_state.processed_files) > 0:
-        update_ui(st.session_state.combined_results,
-                  st.session_state.original_results,
-                  st.session_state.flagged_events,
-                  st.session_state.job_analytics,
-                  ui)
+        update_ui(
+            st.session_state.combined_results,
+            st.session_state.original_results,
+            st.session_state.flagged_events,
+            st.session_state.job_analytics,
+            ui,
+        )
 
     elif uploaded_files:
         # process all uploaded files with DocumentProcessingService
 
         print("Retry Not in session state, processing documents normally")
-        combined_results, original_personal_info_list, job_analytics, flagged_events = doc_processor.process_documents(
-            uploaded_files)
+        (
+            combined_results,
+            original_personal_info_list,
+            job_analytics,
+            flagged_events,
+        ) = doc_processor.process_documents(uploaded_files)
 
-        update_ui(combined_results, original_personal_info_list, flagged_events, job_analytics, ui)
+        update_ui(
+            combined_results,
+            original_personal_info_list,
+            flagged_events,
+            job_analytics,
+            ui,
+        )
         st.session_state.processed_files = uploaded_files
         st.session_state.combined_results.extend(combined_results)
         st.session_state.original_results.extend(original_personal_info_list)
@@ -67,12 +87,16 @@ def run_app():
         st.session_state.job_analytics = job_analytics
 
     else:
-        st.write('No file uploaded')
+        st.write("No file uploaded")
 
 
-def update_ui(combined_results, original_personal_info_list, flagged_events, job_analytics, ui):
-    ui.update_docs_processed_ui_log(f'Processed {job_analytics.processed_documents} '
-                                    f'out of {job_analytics.total_documents} documents')
+def update_ui(
+    combined_results, original_personal_info_list, flagged_events, job_analytics, ui
+):
+    ui.update_docs_processed_ui_log(
+        f"Processed {job_analytics.processed_documents} "
+        f"out of {job_analytics.total_documents} documents"
+    )
     ui.display_timed_out_chunks_data(job_analytics.timed_out_chunks_count)
     ui.display_all_timed_out_chunks(flagged_events.timed_out_events)
     ui.display_all_failed_chunks(flagged_events.failed_events)
